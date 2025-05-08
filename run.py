@@ -438,7 +438,7 @@ if __name__ == "__main__":
     order_waited_time = 0.5
     main_loop_sleep = 1  # Sleep 1 second between main loop iterations
     prev_close = None
-    
+    print(send_to_telegram(BOT_TOKEN, CHAT_ID, "wing strategy start"))
     while all_triggered == False:
         time.sleep(main_loop_sleep)  # Add sleep to reduce CPU usage
 
@@ -456,6 +456,7 @@ if __name__ == "__main__":
         something_triggered = False
 
         for contract_name, order in combo_orders.items():
+            contract_name = contract_name.replace("*", "\\*").replace("_", "\\_")
             if ops[order['side']](cur_close, order['trigger_price']) and order['triggered'] == False:
                 
                 send_to_telegram(BOT_TOKEN, CHAT_ID, f"{contract_name} is triggered")
