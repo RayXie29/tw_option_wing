@@ -327,7 +327,7 @@ if __name__ == "__main__":
     total_calls = sorted(list(options['C'].keys()))
     total_puts = sorted(list(options['P'].keys()))
 
-    contract_open = os.environ['CONTRACT_OPEN']
+    contract_open = float(os.environ['CONTRACT_OPEN'])
     
     while contract_open is None:
         contract_open = mkt.close
