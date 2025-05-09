@@ -377,7 +377,7 @@ if __name__ == "__main__":
     while mkt.close is None:
         
         print("mxf data not coming in ...")
-        if is_market_open == False:
+        if is_market_open() == False:
             sleep_time = seconds_until_next_open()
             print(f"Sleep {sleep_time} until market open")
             time.sleep(sleep_time)
