@@ -352,8 +352,8 @@ if __name__ == "__main__":
             'side' : '>=',
             'enter_order' : co_p3,
             'stop_order' : co_p2,
-            'open_q' : 8,
-            'close_q' : 4,
+            'open_q' : 16,
+            'close_q' : 8,
             'triggered' : False,
         },
         'co_p2' : {
@@ -361,8 +361,8 @@ if __name__ == "__main__":
             'side' : '>=',
             'enter_order' : co_p2,
             'stop_order' : co_p1,
-            'open_q' : 4,
-            'close_q' : 2,
+            'open_q' : 8,
+            'close_q' : 4,
             'triggered' : False,
         },
         'co_p1' : {
@@ -370,16 +370,16 @@ if __name__ == "__main__":
             'side' : '>=',
             'enter_order' : co_p1,
             'stop_order' : co_pp5,
-            'open_q' : 2,
-            'close_q' : 1,
-            'triggered' : False,
+            'open_q' : 4,
+            'close_q' : 2,
+            'triggered' : True,
         },
         'co_pp5' : {
             'trigger_price' : std_prices[4],
             'side' : '>=',
             'enter_order' : co_pp5,
             'stop_order' : None,
-            'open_q' : 1,
+            'open_q' : 2,
             'close_q' : 0,
             'triggered' : True,
         },
@@ -456,7 +456,6 @@ if __name__ == "__main__":
         something_triggered = False
 
         for contract_name, order in combo_orders.items():
-            contract_name = contract_name.replace("*", "\\*").replace("_", "\\_")
             if ops[order['side']](cur_close, order['trigger_price']) and order['triggered'] == False:
                 
                 send_to_telegram(BOT_TOKEN, CHAT_ID, f"{contract_name} is triggered")

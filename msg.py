@@ -1,6 +1,7 @@
 import requests
 
 def send_to_telegram(bot_token, chat_id, message):
+    message = message.replace("*", "\\*").replace("_", "\\_")
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {
         'chat_id': chat_id,
