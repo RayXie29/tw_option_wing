@@ -273,6 +273,48 @@ class ComboOrderHandler:
         else:
             self.status = 'partial'
 
+
+def seconds_until_next_open(now=None):
+    """
+    Return how many seconds from `now` until the next time
+    the market exits its closed windows:
+      • 03:45–08:45
+      • 13:45–15:00
+      • weekends all day
+    If already open, returns 0.
+    """
+    now = now or datetime.datetime.now()
+    wd = now.weekday()  # 0=Mon, …, 6=Sun
+    t = now.time()
+
+    # 1) Date of next Monday 08:45 if it is weekend
+    if wd >= 5:
+        # how many days until next Monday?
+        days_ahead = 7 - wd
+        next_open_date = (now + datetime.timedelta(days=days_ahead)).date()
+        next_open_dt = datetime.datetime.combine(next_open_date, datetime.time(8, 45))
+        return (next_open_dt - now).total_seconds()
+
+    # 2) Closed windows today
+    morning_start = datetime.time(3, 45)
+    morning_end   = datetime.time(8, 45)
+    noon_start    = datetime.time(13, 45)
+    noon_end      = datetime.time(15, 0)
+
+    # If we’re in the 03:45–08:45 window, next open is today at 08:45
+    if morning_start <= t < morning_end:
+        next_open_dt = datetime.datetime.combine(now.date(), morning_end)
+        return (next_open_dt - now).total_seconds()
+
+    # If we’re in the 13:45–15:00 window, next open is today at 15:00
+    if noon_start <= t < noon_end:
+        next_open_dt = datetime.datetime.combine(now.date(), noon_end)
+        return (next_open_dt - now).total_seconds()
+
+    # Otherwise, market is open now (or it’s after 15:00 and before midnight,
+    # which you said is open—so we return 0)
+    return 0
+
 def is_market_open(now=None):
     """Return True if now is Mon–Fri and not in the two blocked intervals."""
     now = now or datetime.datetime.now()
@@ -333,7 +375,12 @@ if __name__ == "__main__":
         contract_open = mkt.close
 
     while mkt.close is None:
+        
         print("mxf data not coming in ...")
+        if is_market_open == False:
+            sleep_time = seconds_until_next_open()
+            print(f"Sleep {sleep_time} until market open")
+            time.sleep(sleep_time)
 
     std_prices = calculate_ranges(contract_open, stdval)
     co_p3 = combo_order(opt_contracts, std_prices[7], 0, total_calls, options)
@@ -443,7 +490,9 @@ if __name__ == "__main__":
         time.sleep(main_loop_sleep)  # Add sleep to reduce CPU usage
 
         if is_market_open() == False:
-            continue
+            sleep_time = seconds_until_next_open()
+            print(f"Sleep {sleep_time} until market open")
+            time.sleep(sleep_time)
 
         cur_close = mkt.close
         # Skip processing if price hasn't changed
