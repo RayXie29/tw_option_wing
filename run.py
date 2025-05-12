@@ -331,7 +331,37 @@ def is_market_open(now=None):
 
     return True
 
+
+def market_subscribe(api, contract):
+    print("subscribe market..")
+    api.quote.subscribe(
+        contract,
+        quote_type = sj.constant.QuoteType.Tick,
+        version = sj.constant.QuoteVersion.v1,
+    )
+
+    api.quote.set_on_tick_fop_v1_callback(quote_callback)
+
+def market_unsubscribe(api, contract):
+    print("unsubscribe market..")
+    api.quote.unsubscribe(
+        contract,
+        quote_type = sj.constant.QuoteType.Tick,
+        version = sj.constant.QuoteVersion.v1,
+    )
+
+def order_subscribe(api):
+    print("subscribe order..")
+    api.set_order_callback(order_callback)
+
+
+
+
 if __name__ == "__main__":
+
+    market_subscribed = False
+    order_subscribed = False
+
 
     stdval = float(os.environ["WING_STD"])
 
@@ -353,26 +383,14 @@ if __name__ == "__main__":
     mkt = market()
 
     mxf_contract = api.Contracts.Futures.MXF.MXFR1
-
-    print("subscribe market..")
-    api.quote.subscribe(
-        mxf_contract,
-        quote_type = sj.constant.QuoteType.Tick,
-        version = sj.constant.QuoteVersion.v1,
-    )
-
-    api.quote.set_on_tick_fop_v1_callback(quote_callback)
-    api.set_order_callback(order_callback)
-
     opt_contracts=api.Contracts.Options.TX2
     options = get_options(opt_contracts)
     total_calls = sorted(list(options['C'].keys()))
     total_puts = sorted(list(options['P'].keys()))
-
+    
     contract_open = float(os.environ['CONTRACT_OPEN'])
     
-    while contract_open is None:
-        contract_open = mkt.close
+    
 
     while mkt.close is None:
         
@@ -381,6 +399,19 @@ if __name__ == "__main__":
             sleep_time = seconds_until_next_open()
             print(f"Sleep {sleep_time} until market open")
             time.sleep(sleep_time)
+
+            market_subscribed = False
+            order_subscribed = False
+        else:
+            market_subscribe(api, mxf_contract)
+            order_subscribe(api)
+            time.sleep(1)
+
+            market_subscribed = True
+            order_subscribed = True
+
+    while contract_open is None:
+        contract_open = mkt.close
 
     std_prices = calculate_ranges(contract_open, stdval)
     co_p3 = combo_order(opt_contracts, std_prices[7], 0, total_calls, options)
@@ -391,7 +422,7 @@ if __name__ == "__main__":
     co_n1 = combo_order(opt_contracts, std_prices[2], 1, total_puts, options)
     co_n2 = combo_order(opt_contracts, std_prices[1], 1, total_puts, options)
     co_n3 = combo_order(opt_contracts, std_prices[0], 1, total_puts, options)
-
+    
 
     combo_orders = {
         'co_p3' : {
@@ -490,10 +521,27 @@ if __name__ == "__main__":
         time.sleep(main_loop_sleep)  # Add sleep to reduce CPU usage
 
         if is_market_open() == False:
+
+            market_unsubscribe(api, mxf_contract)
+            order_subscribe(api)
+            market_subscribed = False
+            order_subscribed = False
+
             sleep_time = seconds_until_next_open()
             print(f"Sleep {sleep_time} until market open")
             time.sleep(sleep_time)
-
+            continue
+        else:
+            if market_subscribed == False:
+                market_subscribe(api, mxf_contract)
+                market_subscribed = True
+            if order_subscribed == False:
+                order_subscribe(api)
+                order_subscribed = True
+            
+            time.sleep(1)
+        
+            
         cur_close = mkt.close
         # Skip processing if price hasn't changed
         if cur_close == prev_close:
