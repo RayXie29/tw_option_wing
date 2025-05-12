@@ -550,11 +550,13 @@ if __name__ == "__main__":
         prev_close = cur_close
         placing_trial_time = 1
         covering_trail_time = 1
+        
+        msg_cnt = 0
+        
         something_triggered = False
 
         for contract_name, order in combo_orders.items():
             if ops[order['side']](cur_close, order['trigger_price']) and order['triggered'] == False:
-                
                 send_to_telegram(BOT_TOKEN, CHAT_ID, f"{contract_name} is triggered")
                 something_triggered = True
 
@@ -564,7 +566,8 @@ if __name__ == "__main__":
                 close_q = order['close_q']
                 print(f"{contract_name} is triggered with {order['trigger_price']} and {open_price} / {open_q}")
                 while placing_trial_time < order_trial_limit:
-                    placing_order(api, order['enter_order'], open_price, open_q, 'open')
+                    if msg_cnt%10 == 0:
+                        placing_order(api, order['enter_order'], open_price, open_q, 'open')
                     time.sleep(order_waited_time)
                     coh.evaluate()
                     if coh.status == 'filled':
@@ -581,8 +584,13 @@ if __name__ == "__main__":
                         open_price -= 1
                     
                     placing_trial_time+=1
+                    msg_cnt+=1
+
+
+                msg_cnt = 0
                 while covering_trail_time < order_trial_limit and order['stop_order'] is not None:
-                    send_to_telegram(BOT_TOKEN, CHAT_ID, f"closing {contract_name} close order")
+                    if msg_cnt%10 == 0:
+                        send_to_telegram(BOT_TOKEN, CHAT_ID, f"closing {contract_name} close order")
                     placing_order(api, order['stop_order'], close_price, close_q, 'close')
                     time.sleep(order_waited_time)
                     coh.evaluate()
@@ -598,6 +606,7 @@ if __name__ == "__main__":
                         close_price+=1
 
                     covering_trail_time+=1
+                    msg_cnt+=1
         
         if something_triggered and (placing_trial_time == order_trial_limit or covering_trail_time == order_trial_limit):
             if placing_trial_time == order_trial_limit:
