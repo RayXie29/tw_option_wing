@@ -441,7 +441,7 @@ if __name__ == "__main__":
             'stop_order' : co_p1,
             'open_q' : 8,
             'close_q' : 4,
-            'triggered' : False,
+            'triggered' : True,
         },
         'co_p1' : {
             'trigger_price' : std_prices[5],
