@@ -516,12 +516,12 @@ if __name__ == "__main__":
     order_waited_time = 0.5
     main_loop_sleep = 1  # Sleep 1 second between main loop iterations
     prev_close = None
-    print(send_to_telegram(BOT_TOKEN, CHAT_ID, "wing strategy start"))
+    send_to_telegram(BOT_TOKEN, CHAT_ID, "wing strategy start")
     while all_triggered == False:
         time.sleep(main_loop_sleep)  # Add sleep to reduce CPU usage
 
         if is_market_open() == False:
-
+            send_to_telegram(BOT_TOKEN, CHAT_ID, "Market is closed, waiting for next open")
             market_unsubscribe(api, mxf_contract)
             order_subscribe(api)
             market_subscribed = False
@@ -533,9 +533,11 @@ if __name__ == "__main__":
             continue
         else:
             if market_subscribed == False:
+                send_to_telegram(BOT_TOKEN, CHAT_ID, "Market is open, subscribing market data")
                 market_subscribe(api, mxf_contract)
                 market_subscribed = True
             if order_subscribed == False:
+                send_to_telegram(BOT_TOKEN, CHAT_ID, "Market is open, subscribing order data")
                 order_subscribe(api)
                 order_subscribed = True
             
