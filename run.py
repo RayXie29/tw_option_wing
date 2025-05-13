@@ -402,7 +402,7 @@ if __name__ == "__main__":
 
             market_subscribed = False
             order_subscribed = False
-        else:
+        elif market_subscribed == False or order_subscribed == False:
             market_subscribe(api, mxf_contract)
             order_subscribe(api)
             time.sleep(1)
