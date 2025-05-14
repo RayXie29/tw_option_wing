@@ -383,7 +383,7 @@ if __name__ == "__main__":
     mkt = market()
 
     mxf_contract = api.Contracts.Futures.MXF.MXFR1
-    opt_contracts=api.Contracts.Options.TX2
+    opt_contracts=api.Contracts.Options.TXO
     options = get_options(opt_contracts)
     total_calls = sorted(list(options['C'].keys()))
     total_puts = sorted(list(options['P'].keys()))
