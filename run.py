@@ -97,7 +97,7 @@ def calculate_ranges(open_price, std_val):
     total_bounds = np.concatenate([first_bounds, second_bounds, third_bounds, forth_bounds])
     return sorted(total_bounds)
 
-def get_options(contract):
+def get_options(contract, contract_name='TXO', contract_month='202505'):
     options = defaultdict(dict)
     options['C'] = {}
     options['P'] = {}
@@ -106,6 +106,9 @@ def get_options(contract):
     for key in contract.keys():
         cname = key[:3]
         dmonth = key[3:9]
+        if cname != contract_name or dmonth != contract_month:
+            continue
+
         price = key[9:-1]
         side = key[-1]
         options[side][int(price)] = key
@@ -362,6 +365,8 @@ if __name__ == "__main__":
     market_subscribed = False
     order_subscribed = False
 
+    contract_name = str(os.environ['CONTRACT_NAME'])
+    contract_month = str(os.environ['CONTRACT_MONTH'])
 
     stdval = float(os.environ["WING_STD"])
 
@@ -383,8 +388,8 @@ if __name__ == "__main__":
     mkt = market()
 
     mxf_contract = api.Contracts.Futures.MXF.MXFR1
-    opt_contracts=api.Contracts.Options.TXO
-    options = get_options(opt_contracts)
+    opt_contracts = getattr(api.Contracts.Options, contract_name)
+    options = get_options(opt_contracts, contract_name, contract_month)
     total_calls = sorted(list(options['C'].keys()))
     total_puts = sorted(list(options['P'].keys()))
     
